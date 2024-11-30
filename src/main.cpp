@@ -38,7 +38,7 @@ int main() {
             //engine.DrawCrossCube3D(cubePos+vec3(500*x, 300, 500*y), 250, rotation, vec3(255, 255, 255));
             //engine.DrawAnyBox3D(cubePos+vec3(500*x, 300, 500*y), vec3(200, 20, 90), rotation, vec3(255, 255, 255));
         }
-        engine.DrawImage3DBillBoard(cubePos-vec3(0, ss, 0), 10, rotation);
+        engine.DrawImage3DBillBoard(cubePos-vec3(0, ss, 0), 20, rotation);
         //engine.DrawImage3DWall(cubePos-vec3(200, ss, 0), ss, rotation);
 
         engine.useCamera(gunModelCam);//Draw FPS stuff

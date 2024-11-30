@@ -476,7 +476,6 @@ void GameEngine::DrawImage3DBillBoard(vec3 position, float size, float rotation)
                     projPos-vec2(-size, size),//top left
         };
 
-
         // Project the corners
         SDL_Vertex vertices[4];
         vertices[0].position.x = bottomVertsProjected[0].x();
