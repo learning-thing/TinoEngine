@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Engine.hpp"
-#include "SDL2/SDL.h"
+#include "SDL3/SDL_main.h"
 #include "TCamera.hpp"
 #include "TMovement.hpp"
 
@@ -33,13 +33,13 @@ int main() {
             vec3 nPos = cubePos+vec3(ss*x, 100, ss*y);
             if (isOddNumber(x) && isOddNumber(y)) engine.DrawCubicPlane(nPos, ss/2, rotation, vec3(10, 100, 200), (nPos-cam.position).length());
             else engine.DrawCubicPlane(nPos, ss/2, rotation, vec3(100, 200, 10), (nPos-cam.position).length());
-            //engine.DrawImage3DGround(nPos, ss/3, rotation);
+            engine.DrawImage3DGround(nPos, ss/3, rotation);
             //engine.DrawImage2D(10, 10, 200, 200);
-            //engine.DrawCrossCube3D(cubePos+vec3(500*x, 300, 500*y), 250, rotation, vec3(255, 255, 255));
-            //engine.DrawAnyBox3D(cubePos+vec3(500*x, 300, 500*y), vec3(200, 20, 90), rotation, vec3(255, 255, 255));
+            //engine.DrawCrossCube3D(cubePos+vec3(500*x, 300, 500*y), 250, rotation, vec3(1.0f, 1.0f, 1.0f));
+            //engine.DrawAnyBox3D(cubePos+vec3(500*x, 300, 500*y), vec3(200, 20, 90), rotation, vec3(1.0f, 1.0f, 1.0f));
         }
-        engine.DrawImage3DBillBoard(cubePos-vec3(0, ss, 0), 20, rotation);
-        //engine.DrawImage3DWall(cubePos-vec3(200, ss, 0), ss, rotation);
+        //engine.DrawImage3DBillBoard(cubePos-vec3(0, ss, 0), 20, rotation);
+        engine.DrawImage3DWall(cubePos-vec3(200, ss, 0), ss, rotation);
 
         engine.useCamera(gunModelCam);//Draw FPS stuff
         engine.DrawCrossCube3D(vec3(561, 261, 0), 100, 0, vec3(255));
@@ -48,8 +48,8 @@ int main() {
         engine.HandleEvents();
         //movement.rotation+=mrotSpeed;
 
-        SDL_GetMouseState(&mouseX, &mouseY);
-        movement.rotation = (float)mouseX/100;
+        //SDL_GetMouseState(&mouseX, &mouseY);
+        //movement.rotation = (float)mouseX/100;
         //vec3 Sidewardvec = vec3(cos(-cam.rotation), 0, sin(-cam.rotation));
         {
             cam.position = movement.getPos()-vec3(0, 30, 0);

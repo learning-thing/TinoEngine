@@ -1,7 +1,7 @@
 #ifndef TGAME_H
 #define TGAME_H
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3_image/SDL_image.h>
 #include "vec.hpp"//vec3
 #include "vec2.hpp"//vec2
 #include <array>
@@ -24,7 +24,7 @@ class GameEngine {
         int Winwidth=0;
         int winHeight=0;
         char *memblock;
-        const unsigned char *keys;
+        const bool *keys;
         vec3 cameraPos;
         float camrot = 0;
         bool initialized = false;
@@ -34,6 +34,7 @@ class GameEngine {
         int frameCount = 0;
         bool logging = false;
         bool GameQuit = false;
+        
         SDL_Renderer* renderer = nullptr;
         SDL_Window *window = nullptr;
         typedef std::chrono::high_resolution_clock Time;
@@ -44,15 +45,21 @@ class GameEngine {
         TCamera used_cam;
         SDL_Texture* stoneIMG;
         void Init(int width, int height) {
-            if (SDL_Init(SDL_INIT_VIDEO)<0) std::cerr << "Failed to initialize sdl\n";
+            if (!SDL_Init(SDL_INIT_VIDEO)) std::cerr << "Failed to initialize sdl\n";
             //SDL_Delay(1000);
-            SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
-            if (SDL_CreateWindowAndRenderer(width, height, SDL_RENDERER_ACCELERATED, &window, &renderer) != 0) std::cerr << "Failed to create sdl render\n";
-            SDL_SetWindowTitle(window, "Tino 3d engine");
+            //SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
+            if (!SDL_CreateWindowAndRenderer("Tino 3d engine", width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_BORDERLESS, &window, &renderer)) std::cerr << "Failed to create sdl render\n";
+            //SDL_SetWindowTitle(window, "Tino 3d engine");
             keys = SDL_GetKeyboardState(NULL);
-            stoneIMG = IMG_LoadTexture(renderer, "./res/stone.png");
+            stoneIMG = IMG_LoadTexture(renderer, "res/stone.png");
+            std::cout << SDL_GetError() << "\n";
+            if (stoneIMG==NULL) {
+                std::clog << "Failed to load image\n";
+                GameQuit=true;
+                return;
+            }
             SDL_RenderPresent(renderer);
-            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+            SDL_SetWindowFullscreen(window, true);
             Winwidth = width;
             winHeight = height;
             initialized = true;
@@ -66,11 +73,12 @@ class GameEngine {
 
         void HandleEvents() {
             SDL_Event event;
-            if (SDL_QuitRequested()) {
+            /*
+            if (SDL_ShouldQuit()) {
                 GameQuit = true;
-            }
+            }*/
             while (SDL_PollEvent(&event)) {  // poll until all events are handled!
-                if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                if (event.type == SDL_EVENT_QUIT) {
                     GameQuit = true;
                 }
             }
@@ -182,7 +190,7 @@ class GameEngine {
             if (projectedStart.y()<0)         if (ProjectedEnd.y()<0) return;
 
             SDL_SetRenderDrawColor(renderer, color.x(), color.y(), color.z(), 255*alpha);
-            SDL_RenderDrawLineF(renderer, projectedStart.x(), projectedStart.y(), ProjectedEnd.x(), ProjectedEnd.y());
+            SDL_RenderLine(renderer, projectedStart.x(), projectedStart.y(), ProjectedEnd.x(), ProjectedEnd.y());
         }
         void DrawCrossCube3D(vec3 position, float size, float rotation, vec3 color) {//Actually useful
             // Check if the cube is within the renderable range
@@ -277,22 +285,22 @@ class GameEngine {
                 vertices[0].position.x = bottomVertsProjected[0].x(); 
                 vertices[0].position.y = bottomVertsProjected[0].y(); // Top-left
                 vertices[0].tex_coord.x = 0;   vertices[0].tex_coord.y = 0;
-                vertices[0].color = (SDL_Color){255, 255, 255, 255};       // No tint
+                vertices[0].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
                 vertices[1].position.x = bottomVertsProjected[1].x(); 
                 vertices[1].position.y = bottomVertsProjected[1].y(); // Top-right
                 vertices[1].tex_coord.x = 1;   vertices[1].tex_coord.y = 0;
-                vertices[1].color = (SDL_Color){255, 255, 255, 255};       // No tint
+                vertices[1].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
                 vertices[2].position.x = bottomVertsProjected[2].x(); 
                 vertices[2].position.y = bottomVertsProjected[2].y(); // Bottom-right
                 vertices[2].tex_coord.x = 1;   vertices[2].tex_coord.y = 1;
-                vertices[2].color = (SDL_Color){255, 255, 255, 255};       // No tint
+                vertices[2].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
                 vertices[3].position.x = bottomVertsProjected[3].x(); 
                 vertices[3].position.y = bottomVertsProjected[3].y(); // Bottom-left
                 vertices[3].tex_coord.x = 0;   vertices[3].tex_coord.y = 1;
-                vertices[3].color = (SDL_Color){255, 255, 255, 255};       // No tint
+                vertices[3].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
                 const static int indices[] = {0, 1, 2, 2, 3, 0};
             
                 SDL_RenderGeometry(renderer, stoneIMG, vertices, 4, indices, 6);
@@ -309,27 +317,27 @@ class GameEngine {
             SDL_Vertex vertices[4];
             vertices[0].position.x = 100; vertices[0].position.y = 100; // Top-left
             vertices[0].tex_coord.x = 0;   vertices[0].tex_coord.y = 0;
-            vertices[0].color = (SDL_Color){255, 255, 255, 255};       // No tint
+            vertices[0].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
             vertices[1].position.x = 300; vertices[1].position.y = 100; // Top-right
             vertices[1].tex_coord.x = 1;   vertices[1].tex_coord.y = 0;
-            vertices[1].color = (SDL_Color){255, 255, 255, 255};       // No tint
+            vertices[1].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
             vertices[2].position.x = 300; vertices[2].position.y = 500; // Bottom-right
             vertices[2].tex_coord.x = 1;   vertices[2].tex_coord.y = 1;
-            vertices[2].color = (SDL_Color){255, 255, 255, 255};       // No tint
+            vertices[2].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
             vertices[3].position.x = 100; vertices[3].position.y = 300; // Bottom-left
             vertices[3].tex_coord.x = 0;   vertices[3].tex_coord.y = 1;
-            vertices[3].color = (SDL_Color){255, 255, 255, 255};       // No tint
+            vertices[3].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
             int indices[] = {0, 1, 2, 2, 3, 0};
             
             SDL_RenderGeometry(renderer, stoneIMG, vertices, 4, indices, 6);
             //SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
         }
         void MouseCaptured(bool yesNo) {
-            if (yesNo) SDL_SetRelativeMouseMode(SDL_TRUE);
-            else SDL_SetRelativeMouseMode(SDL_FALSE);
+            //if (yesNo) SDL_SetRelativeMouseMode(SDL_TRUE);
+            //else SDL_SetRelativeMouseMode(SDL_FALSE);
         }
         void DrawTriangle(Triangle triangle, float scale) {
             if (true) {
@@ -358,7 +366,7 @@ class GameEngine {
         }
         void DrawLine2D3D(int startx, int starty, vec3 end) {
             //end-=cameraPos;
-            SDL_RenderDrawLineF(renderer, startx, starty, projected(end).x(), projected(end).y());
+            SDL_RenderLine(renderer, startx, starty, projected(end).x(), projected(end).y());
         }
         void DrawGrid(int lines, int spacing) {
             for (int x = 0; x < lines; x++) {
@@ -461,12 +469,8 @@ void GameEngine::DrawImage3DBillBoard(vec3 position, float size, float rotation)
         vec3 relativePosition = position - cameraPos;
         vec3 rotatedPosition = rotateToCamera(relativePosition);
         vec2 projPos = projected(rotatedPosition);
-
-        if (projPos.x()<0 || projPos.x()>Winwidth+size) {
-            DebugLog("Image out of window not, rendering");
-            return;
-        }
-
+        
+        
         
         // Calculate the vertices for the bottom face of the cube        
         vec2 bottomVertsProjected[4] = {
@@ -475,28 +479,32 @@ void GameEngine::DrawImage3DBillBoard(vec3 position, float size, float rotation)
                     projPos-vec2(size, size),//top left
                     projPos-vec2(-size, size),//top left
         };
-
+        float projWidth = abs(bottomVertsProjected[3].x()-bottomVertsProjected[2].x());
+        if (projPos.x()+projWidth<0) {
+            DebugLog("Image out of window not, rendering");
+            //return;
+        }
         // Project the corners
         SDL_Vertex vertices[4];
         vertices[0].position.x = bottomVertsProjected[0].x();
         vertices[0].position.y = bottomVertsProjected[0].y(); // Top-left
         vertices[0].tex_coord.x = 0;   vertices[0].tex_coord.y = 0;
-        vertices[0].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[0].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
         vertices[1].position.x = bottomVertsProjected[1].x();
         vertices[1].position.y = bottomVertsProjected[1].y(); // Top-right
         vertices[1].tex_coord.x = 1;   vertices[1].tex_coord.y = 0;
-        vertices[1].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[1].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
         vertices[2].position.x = bottomVertsProjected[2].x();
         vertices[2].position.y = bottomVertsProjected[2].y(); // Bottom-right
         vertices[2].tex_coord.x = 1;   vertices[2].tex_coord.y = 1;
-        vertices[2].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[2].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
 
         vertices[3].position.x = bottomVertsProjected[3].x();
         vertices[3].position.y = bottomVertsProjected[3].y(); // Bottom-left
         vertices[3].tex_coord.x = 0;   vertices[3].tex_coord.y = 1;
-        vertices[3].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[3].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 255};       // No tint
         const static int indices[] = {0, 1, 2, 2, 3, 0};
     
         SDL_RenderGeometry(renderer, stoneIMG, vertices, 4, indices, 6);
@@ -513,41 +521,41 @@ void GameEngine::DrawImage3DWall(vec3 position, float size, float rotation) {
         vec3 relativePosition = position - cameraPos;
         vec3 rotatedPosition = rotateToCamera(relativePosition);
         if (projected(rotatedPosition).x()<0 || projected(rotatedPosition).x()>Winwidth+size) {
-            DebugLog("Image out of window not, rendering");
-            return;
+            //DebugLog("Image out of window not, rendering");
+            //return;
         }
         vec2 bottomVertsProjected[4] = {
-                    projected(vec3(rotatedPosition.x() -  size * sin(rotation),  rotatedPosition.y() ,  rotatedPosition.z()+cos(rotation) * (-size))),//top left
+                    projected(vec3(rotatedPosition.x() -  size * sin(rotation),  rotatedPosition.y() ,  rotatedPosition.z()+cos(rotation) * (-size))),
                     projected(vec3(rotatedPosition.x() -  size * cos(-rotation), rotatedPosition.y() , rotatedPosition.z()+sin(-rotation) * (-size))),
-                    projected(vec3(rotatedPosition.x() -  size * cos(-rotation), rotatedPosition.y() +size, rotatedPosition.z()+sin(-rotation) * (-size))),
+                    projected(vec3(rotatedPosition.x() -  size * cos(-rotation), rotatedPosition.y() +size, rotatedPosition.z()+sin(-rotation) * (-size))),//top right
                     projected(vec3(rotatedPosition.x() -  size * sin(rotation),  rotatedPosition.y() +size,  rotatedPosition.z()+cos(rotation) * (-size))),//top left
-            
         };
-
+        
         // Project the corners
         SDL_Vertex vertices[4];
         vertices[0].position.x = bottomVertsProjected[0].x();
         vertices[0].position.y = bottomVertsProjected[0].y(); // Top-left
         vertices[0].tex_coord.x = 0;   vertices[0].tex_coord.y = 0;
-        vertices[0].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[0].color = (SDL_FColor){1, 1, 1, 1};       // No tint
 
         vertices[1].position.x = bottomVertsProjected[1].x();
         vertices[1].position.y = bottomVertsProjected[1].y(); // Top-right
         vertices[1].tex_coord.x = 1;   vertices[1].tex_coord.y = 0;
-        vertices[1].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[1].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f};       // No tint
 
         vertices[2].position.x = bottomVertsProjected[2].x();
         vertices[2].position.y = bottomVertsProjected[2].y(); // Bottom-right
         vertices[2].tex_coord.x = 1;   vertices[2].tex_coord.y = 1;
-        vertices[2].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[2].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f};       // No tint
 
         vertices[3].position.x = bottomVertsProjected[3].x();
         vertices[3].position.y = bottomVertsProjected[3].y(); // Bottom-left
         vertices[3].tex_coord.x = 0;   vertices[3].tex_coord.y = 1;
-        vertices[3].color = (SDL_Color){255, 255, 255, 255};       // No tint
+        vertices[3].color = (SDL_FColor){1.0f, 1.0f, 1.0f, 1.0f};       // No tint
         const static int indices[] = {0, 1, 2, 2, 3, 0};
     
         SDL_RenderGeometry(renderer, stoneIMG, vertices, 4, indices, 6);
+        
     }
 }
 
